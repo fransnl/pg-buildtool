@@ -28,10 +28,13 @@ h1 {
 
 .data-displayed {
     display: grid;
-    grid-template-columns: auto auto auto auto;
+    /* grid-template-columns: auto auto auto auto; */
+    grid-template-columns: repeat(4, 1fr);
     padding-top: 10px;
     padding-inline: 15px;
     gap: 10px;
+    min-height: 0;
+    min-width: 0;
 }
 
 .input-container {
@@ -74,7 +77,8 @@ h1 {
     background-color: #1a1514;
     border: 1px solid black;
     border-radius: 3px;
-    /* padding: 15px; */
+    overflow: hidden;
+    min-width: 0;
 }
 
 .shiny-border {

@@ -187,7 +187,7 @@ function initElements(result, resultAttributes) {
         button.id = cid;
         button.classList = "sorting-button";
         button.addEventListener('click', () => {
-            let items = filter(result, c, 50);
+            let items = filter(result, c, 0);
 
             const buttons = sortingButtons.querySelectorAll('.sorting-button');
             buttons.forEach(btn => btn.classList.remove('button-selected'));
@@ -325,7 +325,7 @@ function displayItems(items, resultAttributes) {
                         <img src="https://cdn.projectgorgon.com/v456/icons/icon_${item.IconId}.png"/>
                         <div class="item-title">
                             <a href="https://wiki.projectgorgon.com/wiki/${itemUrl}" target="_blank" rel="noopener noreferrer">${item.Name}</a>
-                            <h4>Crafting target level ${item.CraftingTargetLevel}</h4>
+                            <h4>${item.CraftingTargetLevel != undefined ? "Crafting target level " + item.CraftingTargetLevel : "No target level"}</h4>
                         </div>
                     </div>
                     <div class="shiny-border"></div>
@@ -385,11 +385,12 @@ function filter(result, filter, lvl) {
     let i = Object.entries(result)
         .filter(([id, item]) =>
             item.Keywords?.includes(filter.split(' ').join(''))
-            && item.CraftingTargetLevel >= lvl
-        )
-        .map(([id, item]) => ({ id, ...item }))
-        .sort((a, b) => (a.CraftingTargetLevel || 0) - (b.CraftingTargetLevel || 0));
-
+            && !item.Keywords?.includes("Lint_NotObtainable")
+    )
+    .map(([id, item]) => ({ id, ...item }))
+    .sort((a, b) => (a.CraftingTargetLevel || 0) - (b.CraftingTargetLevel || 0));
+    
+    //&& item.CraftingTargetLevel >= lvl
     return i
 }
 
