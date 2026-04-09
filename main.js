@@ -50,6 +50,10 @@ let save = {
             "EquipSlot": "Racial",
             "id": "",
         },
+        {
+            "EquipSlot": "Belt",
+            "id": "",
+        },
     ],
     "attributes": {
         "Flat": {},
@@ -90,8 +94,8 @@ async function getData() {
         const resultAbilities = await responseAbilities.json();
 
         let c = read_cookie("save");
-        
-        if (c = null) {
+
+        if (c == null) {
             bake_cookie("save", save);
         } else {
             save = read_cookie("save");
@@ -150,6 +154,9 @@ function handleInput(result, resultAttributes) {
                         break;
                     case "racial":
                         save.gear[9].id = input.value;
+                        break;
+                    case "belt":
+                        save.gear[10].id = input.value;
                         break;
 
                     default:
