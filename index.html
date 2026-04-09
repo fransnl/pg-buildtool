@@ -13,16 +13,17 @@
     <main>
         <h1>PGBuilderTool</h1>
         <div class="input-container" id="input-container">
-            <input type="text" id="head" placeholder="Head slot id"/>
-            <input type="text" id="chest" placeholder="Chest slot id"/>
-            <input type="text" id="legs" placeholder="Legs slot id"/>
-            <input type="text" id="feet" placeholder="Feet slot id"/>
-            <input type="text" id="hands" placeholder="Hands slot id"/>
-            <input type="text" id="mainhand" placeholder="Main Hand slot id"/>
-            <input type="text" id="secondary" placeholder="Secondary slot id"/>
-            <input type="text" id="necklace" placeholder="Necklace id"/>
-            <input type="text" id="ring" placeholder="Ring slot id"/>
-            <input type="text" id="racial" placeholder="Racial slot id"/>
+            <input type="text" id="head" placeholder="Head slot id" value=""/>
+            <input type="text" id="chest" placeholder="Chest slot id" value=""/>
+            <input type="text" id="legs" placeholder="Legs slot id" value=""/>
+            <input type="text" id="feet" placeholder="Feet slot id" value=""/>
+            <input type="text" id="hands" placeholder="Hands slot id" value=""/>
+            <input type="text" id="mainhand" placeholder="Main Hand slot id" value=""/>
+            <input type="text" id="secondary" placeholder="Secondary slot id" value=""/>
+            <input type="text" id="necklace" placeholder="Necklace id" value=""/>
+            <input type="text" id="ring" placeholder="Ring slot id" value=""/>
+            <input type="text" id="racial" placeholder="Racial slot id" value=""/>
+            <input type="text" id="belt" placeholder="Belt" value=""/>
             <button id="save-button">Save</button>
         </div>
         <div id="build-stats" class="build-stats">
@@ -35,6 +36,7 @@
         </div>
         <div id="sorting-buttons" class="sorting-buttons"></div>
         <div class="dark-bg">
+            <div id="radio-buttons-container" class="radio-buttons-container"></div>
             <div id="data-displayed" class="data-displayed"></div>
         </div>
     </main>

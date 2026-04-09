@@ -6,12 +6,13 @@ let buildStats = document.getElementById("build-stats");
 let statLabels = document.getElementById("stat-labels");
 let equippedGear = document.getElementById("equipped-gear");
 let inputContainer = document.getElementById("input-container");
+let radioButtonsContainer = document.getElementById("radio-buttons-container");
 
 let save = {
     "gear": [
         {
             "EquipSlot": "Head",
-            "id": "item_44286",
+            "id": "",
         },
         {
             "EquipSlot": "Chest",
@@ -50,6 +51,15 @@ let save = {
             "id": "",
         },
     ],
+    "attributes": {
+        "Flat": {},
+        "Procentage": {},
+        "FlatI": {},
+        "ProcentageI": {},
+        "FlatA": {},
+        "ProcentageA": {},
+    },
+    "mods": []
 }
 
 async function getData() {
@@ -79,17 +89,22 @@ async function getData() {
 
         const resultAbilities = await responseAbilities.json();
 
-        console.log(filterAbilitiesClass(resultAbilities, "FireMagic"))
-
         let c = read_cookie("save");
-
-        if (s = null) {
+        
+        if (c = null) {
             bake_cookie("save", save);
+        } else {
+            save = read_cookie("save");
         }
-
+        
         initElements(result, resultAttributes);
-
+        
         handleInput(result, resultAttributes);
+
+        console.log("===SAVE===\n", save);
+
+        console.log("\n===FIRE ABILITIES===\n")
+        filterAbilitiesClass(resultAbilities, "FireMagic");
 
         return result;
     } catch (error) {
@@ -97,15 +112,14 @@ async function getData() {
     }
 }
 
-function handleInput(result, resultAttributes){
+function handleInput(result, resultAttributes) {
     let saveButton = document.getElementById('save-button');
     let inputs = inputContainer.querySelectorAll('input');
 
 
     saveButton.addEventListener('click', () => {
         inputs.forEach(input => {
-            console.log(input.id, input.value)
-            if(input.value != "") {
+            if (input.value !== "") {
                 switch (input.id) {
                     case "head":
                         save.gear[0].id = input.value;
@@ -137,10 +151,11 @@ function handleInput(result, resultAttributes){
                     case "racial":
                         save.gear[9].id = input.value;
                         break;
-                
+
                     default:
                         break;
                 }
+                input.value = "";
             }
 
         })
@@ -176,7 +191,7 @@ function initElements(result, resultAttributes) {
         "Chemistry Flask",
         "Bow",
         "Dirk",
-        "Crossbow" 
+        "Crossbow"
     ]
 
     categories.forEach(c => {
@@ -187,28 +202,120 @@ function initElements(result, resultAttributes) {
         button.id = cid;
         button.classList = "sorting-button";
         button.addEventListener('click', () => {
-            let items = filter(result, c, 0);
+
+            let items = filterItems(
+                result,
+                {
+                    keywords: [c],
+                    excludeKeywords: ["Lint_NotObtainable"],
+                }
+            );
 
             const buttons = sortingButtons.querySelectorAll('.sorting-button');
             buttons.forEach(btn => btn.classList.remove('button-selected'));
-            
+
             button.classList.add('button-selected');
+
+            displayRadioButtons(c, items, resultAttributes);
 
             displayItems(items, resultAttributes);
         });
         sortingButtons.insertAdjacentElement("beforeend", button);
     });
 
-    let initItems = filter(result, categories[0], 50);
+    let initItems = filterItems(
+        result,
+        {
+            keywords: ["ClothArmor"],
+            excludeKeywords: ["Lint_NotObtainable"],
+        }
+    );
+
+    let button = document.getElementById('cloth-armor');
+    button.classList.add('button-selected');
+
+    displayRadioButtons("Cloth Armor", initItems, resultAttributes);
+
     displayItems(initItems, resultAttributes);
 
     displayStats(result, resultAttributes);
 }
 
-function buttonSelected(id){
+function displayRadioButtons(c, items, resultAttributes) {
+    radioButtonsContainer.innerHTML = "";
+    if (c == "Cloth Armor" || c == "Leather Armor" || c == "Metal Armor" || c == "Organic Armor") {
+        radioButtonsContainer.insertAdjacentHTML(
+            "beforeend",
+            `
+                <div id="armor-type-radio">
+                    <input type="radio" id="all" name="armor_type" value="All" checked>
+                    <label for="all">All</label>
+                    <input type="radio" id="head" name="armor_type" value="Head">
+                    <label for="head">Head</label>
+                    <input type="radio" id="chest" name="armor_type" value="Chest">
+                    <label for="chest">Chest</label>
+                    <input type="radio" id="legs" name="armor_type" value="Legs">
+                    <label for="legs">Legs</label>
+                    <input type="radio" id="feet" name="armor_type" value="Feet">
+                    <label for="feet">Feet</label>
+                    <input type="radio" id="hands" name="armor_type" value="Hands">
+                    <label for="hands">Hands</label>
+                </div>
+                <div id="crafting-level-input">
+                    <label for="crafting-target-lvl">Minimum Crafting Target Level</label>
+                    <input type="number" id="crafting-target-lvl" name="crafting_target_level" min="0" max="110" value="0"/>
+                </div>
+                <button id="filter-button">Filter ${c}</button>
+                `
+        );
+
+        let button = document.getElementById('filter-button');
+        button.addEventListener('click', () => {
+            let armorType = document.querySelector('[name="armor_type"]:checked').value;
+            let craftingLevel = document.querySelector('[name="crafting_target_level"]').value;
+
+            let i = filterItems(
+                items,
+                {
+                    keywords: armorType == "All" ? [] : [c, armorType],
+                    minCraftingLvl: craftingLevel
+                }
+            );
+
+            displayItems(i, resultAttributes);
+        })
+    } else {
+        radioButtonsContainer.insertAdjacentHTML(
+            "beforeend",
+            `
+                <div id="crafting-level-input">
+                    <label for="crafting-target-lvl">Minimum Crafting Target Level</label>
+                    <input type="number" id="crafting-target-lvl" name="crafting_target_level" min="0" max="110" value="0"/>
+                </div>
+                <button id="filter-button">Filter ${c}</button>
+                `
+        );
+
+        let button = document.getElementById('filter-button');
+        button.addEventListener('click', () => {
+            let craftingLevel = document.querySelector('[name="crafting_target_level"]').value;
+
+            let i = filterItems(
+                items,
+                {
+                    minCraftingLvl: craftingLevel
+                }
+            );
+
+            displayItems(i, resultAttributes);
+        })
+    }
+}
+
+function buttonSelected(id) {
     let buttons = sortingButtons.querySelectorAll('button');
     buttons.forEach(b => {
-        if (b.id == id){
+        if (b.id == id) {
             b.className = "button-selected"
         } else {
             b.className = "sorting-button";
@@ -216,7 +323,7 @@ function buttonSelected(id){
     });
 }
 
-function displayStats(result, resultAttributes){
+function displayStats(result, resultAttributes) {
     let stats = {};
 
     let s = read_cookie("save");
@@ -225,7 +332,7 @@ function displayStats(result, resultAttributes){
     statLabels.innerHTML = "";
 
     s?.gear.forEach(gear => {
-        if(gear.id != "") {
+        if (gear.id != "") {
             let item = filterForItem(result, gear.id);
 
             equippedGear.insertAdjacentHTML(
@@ -235,7 +342,7 @@ function displayStats(result, resultAttributes){
                             <div class="item-header">
                                 <img src="https://cdn.projectgorgon.com/v456/icons/icon_${item[0].IconId}.png"/>
                                 <div class="item-title">
-                                    <a href="https://wiki.projectgorgon.com/wiki/${item[0].id}" target="_blank" rel="noopener noreferrer">${item[0].Name}</a>
+                                    <a href="https://wiki.projectgorgon.com/wiki/${item[0].Name.split(' ').join('_')}" target="_blank" rel="noopener noreferrer">${item[0].Name}</a>
                                     <h4>Crafting target level ${item[0].CraftingTargetLevel}</h4>
                                 </div>
                             </div>
@@ -254,21 +361,21 @@ function displayStats(result, resultAttributes){
                             </div>
                         </div>`
             );
-            
+
             let attributesContainer = document.getElementById(`attributes-equipped-${item[0].id}`);
 
             item[0].EffectDescs.forEach(attribute => {
-                
+
                 let [type, value] = attribute.split(/[{}]/).filter(Boolean);
                 let n = Number(value)
-                n = n % 1 !== 0 ? n * 100 : n;
+                let norm = n % 1 !== 0 ? n * 100 : n;
 
                 if (type && value) {
                     attributesContainer.insertAdjacentHTML(
                         "beforeend",
                         `<div style="display: flex; align-items: center; gap: 10px;">
                                 ${resultAttributes[type]?.IconIds?.[0] != undefined ? `<img height="25" src="https://cdn.projectgorgon.com/v456/icons/icon_${resultAttributes[type].IconIds[0]}.png"/>` : ""}
-                                <p>${resultAttributes[type].Label} ${value}</p>
+                                <p>${resultAttributes[type].Label} ${norm}</p>
                             <div/>`
                     );
 
@@ -291,12 +398,45 @@ function displayStats(result, resultAttributes){
         }
     })
 
-    for ( var stat in stats ) {
-        statLabels.insertAdjacentHTML("beforeend", 
+    for (var stat in stats) {
+        let [id, prop, type] = stat.split('_');
+
+        if (id == "MOD") {
+
+            if (prop == "SKILL") {
+                save.attributes.Procentage[type] = stats[stat];
+            } else if (type == "DIRECT") {
+                save.attributes.Procentage[prop] = stats[stat];
+            } else if (type == "INDIRECT") {
+                save.attributes.ProcentageI[prop] = stats[stat];
+            } else if (type == undefined) {
+                save.attributes.Procentage[prop] = stats[stat];
+                save.attributes.ProcentageI[prop] = stats[stat];
+            } else if (prop == "ABILITY") {
+                save.attributes.ProcentageA[type] = stats[stat];
+            }
+        }
+
+        if (id == "BOOST") {
+            if (prop == "SKILL") {
+                save.attributes.Flat[type] = stats[stat];
+            } else if (type == "DIRECT") {
+                save.attributes.Flat[prop] = stats[stat];
+            } else if (type == "INDIRECT") {
+                save.attributes.FlatI[prop] = stats[stat];
+            } else if (type == undefined) {
+                save.attributes.Flat[prop] = stats[stat];
+                save.attributes.FlatI[prop] = stats[stat];
+            } else if (prop == "ABILITY") {
+                save.attributes.FlatA[type] = stats[stat];
+            }
+        }
+
+        statLabels.insertAdjacentHTML("beforeend",
             `
             <div class="stat-label">
                 ${resultAttributes[stat]?.IconIds?.[0] != undefined ? `<img height="25" src="https://cdn.projectgorgon.com/v456/icons/icon_${resultAttributes[stat].IconIds[0]}.png"/>` : ""}
-                <p>${resultAttributes[stat]?.Label ? resultAttributes[stat]?.Label : stat} ${stats[stat] == 0 ? "": stats[stat]}</p>
+                <p>${resultAttributes[stat]?.Label ? resultAttributes[stat]?.Label : stat} ${stats[stat] == 0 ? "" : stats[stat]}</p>
             </div>
             `
         );
@@ -381,53 +521,118 @@ function filterAll(result) {
 }
 
 function filter(result, filter, lvl) {
-    
+
     let i = Object.entries(result)
         .filter(([id, item]) =>
             item.Keywords?.includes(filter.split(' ').join(''))
             && !item.Keywords?.includes("Lint_NotObtainable")
-    )
-    .map(([id, item]) => ({ id, ...item }))
-    .sort((a, b) => (a.CraftingTargetLevel || 0) - (b.CraftingTargetLevel || 0));
-    
-    //&& item.CraftingTargetLevel >= lvl
+            && !item.Keywords?.includes("Crafted")
+            && item.CraftingTargetLevel >= lvl
+
+        )
+        .map(([id, item]) => ({ id, ...item }))
+        .sort((a, b) => (a.CraftingTargetLevel || 0) - (b.CraftingTargetLevel || 0));
+
     return i
 }
 
+function filterItems(result, options = {}) {
+    const {
+        keywords = [],
+        excludeKeywords = [],
+        minCraftingLvl = null,
+        equipSlot = null,
+    } = options;
+
+    return Object.entries(result)
+        .filter(([id, item]) => {
+            if (minCraftingLvl !== null && (item.CraftingTargetLevel ?? 0) < minCraftingLvl) {
+                return false;
+            }
+
+            if (equipSlot !== null && !(item.EquipSlot == equipSlot)) {
+                return false
+            }
+
+            if (keywords.length > 0 && !keywords.every(keyword => item.Keywords?.includes(keyword.split(" ").join("")))) {
+                return false
+            }
+
+            if (excludeKeywords.length > 0 && excludeKeywords.every(ekeyword => item.Keywords?.includes(ekeyword))) {
+                return false
+            }
+
+            return true
+        })
+        .map(([id, item]) => ({ id, ...item }))
+        .sort((a, b) => (a.CraftingTargetLevel || 0) - (b.CraftingTargetLevel || 0));
+}
+
 function filterForItem(result, id) {
-    
+
     let i = Object.entries(result)
         .filter(([itemId, item]) =>
             itemId === id
-        ).map(([itemId, item]) => ({ id: itemId, ...item}));
-    
+        ).map(([itemId, item]) => ({ id: itemId, ...item }));
+
     return i
 }
 
 function filterAbilitiesClass(resultAbilities, skill) {
-    let a = Object.entries(resultAbilities)
+    let af = Object.entries(resultAbilities)
         .filter(([id, ability]) =>
             ability.Skill === skill
-            && ability.Keywords.includes("Calefaction")
+            //&& ability.Keywords.includes("Calefaction")
+            && ability?.Prerequisite == undefined
         )
         .map(([id, ability]) => ({ id, ...ability }))
+        .sort((a, b) => (a.Level || 0) - (b.Level || 0));
 
-    return a
+    console.log(af[4])
+    af.forEach(a => {
+        //console.log(a.Keywords[2])
+        if (a.PvE.Damage != undefined){
+            let direct = calculateDirectDamage(a.PvE.Damage, a.Skill, a.DamageType, a.Keywords[2]);
+            console.log(`${a.Name}: ${a.PvE.Damage} ${direct}`)
+        }
+    })
+
+    return af
+}
+
+function calculateDirectDamage(baseDamage, skill, damageType, ability){
+    let s = skill.toUpperCase()
+    let d = damageType.toUpperCase()
+    let a = ability.toUpperCase()
+
+    let flat = save.attributes.Flat[s] != undefined ? save.attributes.Flat[s] : 0;
+    let flatT = save.attributes.Flat[d] != undefined ? save.attributes.Flat[d] : 0;
+    let flatUniversal = save.attributes.Flat["UNIVERSAL"] != undefined ? save.attributes.Flat["UNIVERSAL"] : 0;
+    let flatA = save.attributes.FlatA[a] != undefined ? save.attributes.FlatA[a] : 0;
+
+    let mod = save.attributes.Flat[s] != undefined ? save.attributes.Flat[s] : 0;
+    let modT = save.attributes.Flat[d] != undefined ? save.attributes.Flat[d] : 0;
+    let modUniversal = save.attributes.Flat["UNIVERSAL"] != undefined ? save.attributes.Flat["UNIVERSAL"] : 0;
+    let modA = save.attributes.FlatA[a] != undefined ? save.attributes.FlatA[a] : 0;
+
+    let nd = ((baseDamage * (1 + mod + modT + modUniversal + modA)) + ((flat + flatUniversal + flatA + flatT)*(1 + modT + modUniversal + modA)));
+
+    return nd
 }
 
 function bake_cookie(name, value) {
-  var cookie = `${name}=${JSON.stringify(value)}`;
-  document.cookie = cookie;
+    var cookie = `${name}=${JSON.stringify(value)}`;
+    document.cookie = cookie;
 }
 
 function read_cookie(name) {
- var result = document.cookie.match(new RegExp(name + '=([^;]+)'));
- result && (result = JSON.parse(result[1]));
- return result;
+    var result = document.cookie.match(new RegExp(name + '=([^;]+)'));
+    result && (result = JSON.parse(result[1]));
+    return result;
 }
 
 function delete_cookie(name) {
-  document.cookie = `${name}=${JSON.stringify(save)}; max-age=0`;//'=; expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/; domain=.';
+    document.cookie = `${name}=${JSON.stringify(save)}; max-age=0`;//'=; expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/; domain=.';
 }
 
 getData();
